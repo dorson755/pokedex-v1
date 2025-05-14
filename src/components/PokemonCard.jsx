@@ -1,10 +1,16 @@
-import { useEffect } from 'react';
-import { SpeakerWaveIcon, ArrowPathIcon } from '@heroicons/react/24/solid';
+import { useState } from 'react';
+import { 
+  SpeakerWaveIcon, 
+  ArrowPathIcon,
+  SparklesIcon 
+} from '@heroicons/react/24/solid';
 import usePokemon from '../hooks/usePokemon';
 import LoadingSkeleton from './LoadingSkeleton';
 import ErrorMessage from './ErrorMessage';
+import EvolutionChain from './EvolutionChain';
 
 const PokemonCard = () => {
+  const [isShiny, setIsShiny] = useState(false);
   const { pokemon, loading, error, fetchRandomPokemon } = usePokemon();
 
   const playSound = () => {
@@ -40,6 +46,15 @@ const PokemonCard = () => {
             
             <div className="flex gap-3">
               <button
+                onClick={() => setIsShiny(!isShiny)}
+                className={`p-2 rounded-full transition-colors ${
+                  isShiny ? 'bg-yellow-400/20' : 'bg-white/10'
+                } hover:bg-white/20`}
+                aria-label="Toggle shiny variant"
+              >
+                <SparklesIcon className="w-5 h-5 text-yellow-400" />
+              </button>
+              <button
                 onClick={playSound}
                 className="p-2 md:p-3 rounded-full bg-white/10 hover:bg-white/20 transition"
                 aria-label="Play cry"
@@ -62,7 +77,11 @@ const PokemonCard = () => {
             {/* Image Section */}
             <div className="relative aspect-square bg-white/5 rounded-2xl overflow-hidden">
               <img
-                src={pokemon.sprites.other['official-artwork'].front_default || pokemon.sprites.front_default}
+                src={
+                  isShiny 
+                    ? pokemon.sprites.other['official-artwork'].front_shiny 
+                    : pokemon.sprites.other['official-artwork'].front_default
+                }                
                 alt={pokemon.name}
                 className="w-full h-full object-contain p-4 hover:scale-105 transition-transform duration-300"
                 onError={(e) => {
@@ -87,6 +106,9 @@ const PokemonCard = () => {
               </div>
             </div>
           </div>
+
+          {/* Evolution Chain - Now inside pokemon conditional */}
+          <EvolutionChain speciesUrl={pokemon.species.url} />
         </div>
       )}
     </>
