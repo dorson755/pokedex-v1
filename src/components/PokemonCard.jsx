@@ -79,15 +79,20 @@ const PokemonCard = ({ searchQuery, onRandom, onLoadComplete, onEvolutionClick }
           <div className="grid md:grid-cols-2 gap-6 md:gap-8">
             <div className="relative aspect-square bg-white/5 rounded-2xl overflow-hidden">
               <img
-                src={
-                  isShiny 
-                    ? pokemon.sprites.other['official-artwork'].front_shiny 
-                    : pokemon.sprites.other['official-artwork'].front_default
-                }
+                src={isShiny 
+                                ? pokemon.sprites.other['official-artwork'].front_shiny 
+                                : pokemon.sprites.other['official-artwork'].front_default}
                 alt={pokemon.name}
-                className="w-full h-full object-contain p-4 hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+                decoding="async"
+                className="w-full h-full object-contain p-4 hover:scale-105 transition-transform duration-300 pokemon-image" // Added class
+                onLoad={(e) => {
+                  e.target.classList.add('pokemon-image-loaded');
+                  e.target.classList.remove('pokemon-image');
+                }}
                 onError={(e) => {
                   e.target.src = '/placeholder-pokeball.png';
+                  e.target.classList.remove('pokemon-image'); // Remove blur on error
                 }}
               />
             </div>

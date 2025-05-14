@@ -32,3 +32,15 @@
 ::-webkit-scrollbar-thumb {
   @apply bg-white/20 rounded-full;
 }
+
+/* Replaced the existing blur CSS with: */
+.pokemon-image {
+  filter: blur(8px);
+  transform: scale(1.1);
+  transition: filter 0.3s ease-out, transform 0.3s ease-out;
+}
+
+.pokemon-image-loaded {
+  filter: none;
+  transform: none;
+}
