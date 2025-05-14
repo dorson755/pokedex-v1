@@ -9,7 +9,7 @@ import LoadingSkeleton from './LoadingSkeleton';
 import ErrorMessage from './ErrorMessage';
 import EvolutionChain from './EvolutionChain';
 
-const PokemonCard = ({ searchQuery, onRandom, onLoadComplete }) => {
+const PokemonCard = ({ searchQuery, onRandom, onLoadComplete, onEvolutionClick }) => {
   const [isShiny, setIsShiny] = useState(false);
   const { pokemon, loading, error } = usePokemon(searchQuery);
 
@@ -107,8 +107,10 @@ const PokemonCard = ({ searchQuery, onRandom, onLoadComplete }) => {
               </div>
             </div>
           </div>
-
-          <EvolutionChain speciesUrl={pokemon.species.url} />
+          <EvolutionChain 
+            speciesUrl={pokemon.species.url}
+            onPokemonClick={onEvolutionClick} // ✅ Pass it here
+          />
         </div>
       )}
     </>

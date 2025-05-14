@@ -6,7 +6,9 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshCount, setRefreshCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-
+  const handleEvolutionClick = (pokemonName) => {
+    setSearchQuery(pokemonName);
+  };
   const handleRandom = () => {
     if (isLoading) return;
     setIsLoading(true);
@@ -29,6 +31,7 @@ export default function App() {
       
       <PokemonCard 
         searchQuery={searchQuery}
+        onEvolutionClick={handleEvolutionClick}
         key={refreshCount}
         onRandom={handleRandom}
         onLoadComplete={() => setIsLoading(false)}
