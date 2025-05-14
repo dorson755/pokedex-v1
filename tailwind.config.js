@@ -1,11 +1,19 @@
-/** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   content: [
     "./index.html",
-    "./src/**/*.{js,jsx}"
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      backdropBlur: {
+        xs: '2px',
+      },
+      colors: {
+        'pokemon-blue': '#3B4CCA',
+        'pokemon-red': '#FF0000',
+        'glass-white': 'rgba(255, 255, 255, 0.1)'
+      },
+    },
   },
   plugins: [],
 }
