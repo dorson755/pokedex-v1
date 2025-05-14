@@ -17,7 +17,7 @@ export default function usePokemon(searchQuery) {
         
         const identifier = searchQuery 
           ? searchQuery.toLowerCase()
-          : Math.floor(Math.random() * 600) + 1;
+          : Math.floor(Math.random() * 1024) + 1;
 
         const { data } = await axios.get(
           `https://pokeapi.co/api/v2/pokemon/${identifier}`,
