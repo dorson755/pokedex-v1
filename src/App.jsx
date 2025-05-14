@@ -4,7 +4,15 @@ import SearchBar from './components/SearchBar';
 
 export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [forceRefresh, setForceRefresh] = useState(Date.now());
+  const [refreshCount, setRefreshCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleRandom = () => {
+    if (isLoading) return;
+    setIsLoading(true);
+    setSearchQuery('');
+    setRefreshCount(prev => prev + 1);
+  };
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 py-12 px-4 sm:px-6 lg:px-8">
@@ -15,14 +23,15 @@ export default function App() {
         
         <SearchBar 
           onSearch={setSearchQuery}
-          onRandom={() => setForceRefresh(Date.now())}
+          onRandom={handleRandom}
         />
-        
       </header>
       
       <PokemonCard 
-        searchQuery={searchQuery} 
-        key={forceRefresh}
+        searchQuery={searchQuery}
+        key={refreshCount}
+        onRandom={handleRandom}
+        onLoadComplete={() => setIsLoading(false)}
       />
       
       <footer className="mt-12 text-center text-white/50 text-sm">

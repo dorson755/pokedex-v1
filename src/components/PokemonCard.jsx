@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   SpeakerWaveIcon, 
   ArrowPathIcon,
@@ -9,9 +9,17 @@ import LoadingSkeleton from './LoadingSkeleton';
 import ErrorMessage from './ErrorMessage';
 import EvolutionChain from './EvolutionChain';
 
-const PokemonCard = () => {
+const PokemonCard = ({ searchQuery, onRandom, onLoadComplete }) => {
   const [isShiny, setIsShiny] = useState(false);
-  const { pokemon, loading, error, fetchRandomPokemon } = usePokemon();
+  const { pokemon, loading, error } = usePokemon(searchQuery);
+
+  useEffect(() => {
+    if (!loading) onLoadComplete?.();
+  }, [loading, onLoadComplete]);
+
+  useEffect(() => {
+    setIsShiny(false);
+  }, [pokemon?.id]);
 
   const playSound = () => {
     if (!pokemon?.cries?.latest) return;
@@ -25,15 +33,11 @@ const PokemonCard = () => {
       {loading && <LoadingSkeleton />}
       
       {error && (
-        <ErrorMessage 
-          message={error} 
-          onRetry={fetchRandomPokemon} 
-        />
+        <ErrorMessage message={error} onRetry={onRandom} />
       )}
 
       {pokemon && (
         <div className="glass-panel max-w-2xl mx-auto p-6 md:p-8 space-y-6 relative group">
-          {/* Header */}
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold capitalize text-white">
@@ -61,27 +65,25 @@ const PokemonCard = () => {
               >
                 <SpeakerWaveIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
               </button>
-              
               <button
-                onClick={fetchRandomPokemon}
+                onClick={onRandom}
                 className="p-2 md:p-3 rounded-full bg-white/10 hover:bg-white/20 transition"
                 aria-label="Refresh"
               >
                 <ArrowPathIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
               </button>
+
             </div>
           </div>
 
-          {/* Main Content */}
           <div className="grid md:grid-cols-2 gap-6 md:gap-8">
-            {/* Image Section */}
             <div className="relative aspect-square bg-white/5 rounded-2xl overflow-hidden">
               <img
                 src={
                   isShiny 
                     ? pokemon.sprites.other['official-artwork'].front_shiny 
                     : pokemon.sprites.other['official-artwork'].front_default
-                }                
+                }
                 alt={pokemon.name}
                 className="w-full h-full object-contain p-4 hover:scale-105 transition-transform duration-300"
                 onError={(e) => {
@@ -90,7 +92,6 @@ const PokemonCard = () => {
               />
             </div>
 
-            {/* Stats Section */}
             <div className="space-y-6">
               <TypeBadges types={pokemon.types} />
               <StatsGrid stats={pokemon.stats} />
@@ -107,7 +108,6 @@ const PokemonCard = () => {
             </div>
           </div>
 
-          {/* Evolution Chain - Now inside pokemon conditional */}
           <EvolutionChain speciesUrl={pokemon.species.url} />
         </div>
       )}

@@ -1,12 +1,14 @@
+import { useState } from 'react';
 import { MagnifyingGlassIcon, SparklesIcon } from '@heroicons/react/24/solid';
-import { useState, useEffect } from 'react';
 
 export default function SearchBar({ onSearch, onRandom }) {
   const [inputValue, setInputValue] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSearch(inputValue);
+    if (inputValue.trim()) {
+      onSearch(inputValue.trim());
+    }
   };
 
   return (
@@ -20,6 +22,7 @@ export default function SearchBar({ onSearch, onRandom }) {
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Search Pokémon by name or ID..."
             className="w-full bg-transparent border-0 text-white py-4 px-4 focus:ring-0"
+            aria-label="Search Pokémon"
           />
         </div>
         
@@ -33,11 +36,10 @@ export default function SearchBar({ onSearch, onRandom }) {
         <button
           type="button"
           onClick={() => {
-            onSearch('');
-            onRandom();
+            onRandom(); // ✅ Calls App.jsx's handleRandom
+            setInputValue('');
           }}
           className="glass-panel px-4 hover:bg-white/20 transition-colors"
-          aria-label="Random Pokémon"
         >
           <SparklesIcon className="w-5 h-5 text-yellow-400" />
         </button>
