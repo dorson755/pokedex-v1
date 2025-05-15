@@ -46,7 +46,7 @@ const EvolutionChain = React.memo(({ speciesUrl, onPokemonClick }) => {
   if (!chain) return null;
 
   return (
-    <div className="glass-panel p-6 mt-8">
+    <div className="bg-white/5 rounded-2xl p-6 mt-8">
       <h3 className="text-xl font-bold text-white mb-4">Evolution Chain</h3>
       <div className="flex flex-wrap justify-center gap-6">
         {chain.map((evo, index) => (
