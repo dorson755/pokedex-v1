@@ -3,7 +3,6 @@
 A high-performance Pokédex web app built with React, featuring advanced memoization, responsive design, and real Pokémon data from [PokeAPI](https://pokeapi.co/).
 
 ![Demo](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcW5jZ3RlY2VtZ3V5b2R6eXJtY2J6dW1xY2RlY3RqZzZ1NnF0eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/xT5LMHxhOfscxPfIfm/giphy.gif)  
-*(Replace with your own GIF/video)*
 
 ## ✨ Features
 
