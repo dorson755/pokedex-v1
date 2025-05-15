@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { memo, useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   SpeakerWaveIcon, 
   ArrowPathIcon,
@@ -9,9 +9,25 @@ import LoadingSkeleton from './LoadingSkeleton';
 import ErrorMessage from './ErrorMessage';
 import EvolutionChain from './EvolutionChain';
 
-const PokemonCard = ({ searchQuery, onRandom, onLoadComplete, onEvolutionClick }) => {
+// Main component wrapped in memo
+const PokemonCard = memo(({ searchQuery, onRandom, onLoadComplete, onEvolutionClick }) => {
   const [isShiny, setIsShiny] = useState(false);
   const { pokemon, loading, error } = usePokemon(searchQuery);
+
+  // Memoize sprite URL
+  const spriteUrl = useMemo(() => {
+    return isShiny 
+      ? pokemon?.sprites.other['official-artwork'].front_shiny 
+      : pokemon?.sprites.other['official-artwork'].front_default;
+  }, [isShiny, pokemon?.sprites]);
+
+  // Memoize sound playback
+  const playSound = useCallback(() => {
+    if (!pokemon?.cries?.latest) return;
+    const audio = new Audio(pokemon.cries.latest);
+    audio.volume = 0.3;
+    audio.play().catch(e => console.error('Audio error:', e));
+  }, [pokemon?.cries?.latest]);
 
   useEffect(() => {
     if (!loading) onLoadComplete?.();
@@ -20,13 +36,6 @@ const PokemonCard = ({ searchQuery, onRandom, onLoadComplete, onEvolutionClick }
   useEffect(() => {
     setIsShiny(false);
   }, [pokemon?.id]);
-
-  const playSound = () => {
-    if (!pokemon?.cries?.latest) return;
-    const audio = new Audio(pokemon.cries.latest);
-    audio.volume = 0.3;
-    audio.play().catch(e => console.error('Audio error:', e));
-  };
 
   return (
     <>
@@ -38,6 +47,7 @@ const PokemonCard = ({ searchQuery, onRandom, onLoadComplete, onEvolutionClick }
 
       {pokemon && (
         <div className="glass-panel max-w-2xl mx-auto p-6 md:p-8 space-y-6 relative group">
+          {/* Header Section */}
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold capitalize text-white">
@@ -49,81 +59,105 @@ const PokemonCard = ({ searchQuery, onRandom, onLoadComplete, onEvolutionClick }
             </div>
             
             <div className="flex gap-3">
-              <button
-                onClick={() => setIsShiny(!isShiny)}
-                className={`p-2 rounded-full transition-colors ${
-                  isShiny ? 'bg-yellow-400/20' : 'bg-white/10'
-                } hover:bg-white/20`}
-                aria-label="Toggle shiny variant"
-              >
-                <SparklesIcon className="w-5 h-5 text-yellow-400" />
-              </button>
-              <button
-                onClick={playSound}
-                className="p-2 md:p-3 rounded-full bg-white/10 hover:bg-white/20 transition"
-                aria-label="Play cry"
-              >
-                <SpeakerWaveIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
-              </button>
-              <button
-                onClick={onRandom}
-                className="p-2 md:p-3 rounded-full bg-white/10 hover:bg-white/20 transition"
-                aria-label="Refresh"
-              >
-                <ArrowPathIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
-              </button>
-
+              <ShinyToggle isShiny={isShiny} setIsShiny={setIsShiny} />
+              <SoundButton playSound={playSound} />
+              <RefreshButton onRandom={onRandom} />
             </div>
           </div>
 
+          {/* Main Content */}
           <div className="grid md:grid-cols-2 gap-6 md:gap-8">
-            <div className="relative aspect-square bg-white/5 rounded-2xl overflow-hidden">
-              <img
-                src={isShiny 
-                                ? pokemon.sprites.other['official-artwork'].front_shiny 
-                                : pokemon.sprites.other['official-artwork'].front_default}
-                alt={pokemon.name}
-                loading="lazy"
-                decoding="async"
-                className="w-full h-full object-contain p-4 hover:scale-105 transition-transform duration-300 pokemon-image" // Added class
-                onLoad={(e) => {
-                  e.target.classList.add('pokemon-image-loaded');
-                  e.target.classList.remove('pokemon-image');
-                }}
-                onError={(e) => {
-                  e.target.src = '/placeholder-pokeball.png';
-                  e.target.classList.remove('pokemon-image'); // Remove blur on error
-                }}
-              />
-            </div>
-
+            <PokemonImage 
+              spriteUrl={spriteUrl} 
+              name={pokemon.name} 
+              isShiny={isShiny}
+            />
+            
             <div className="space-y-6">
               <TypeBadges types={pokemon.types} />
               <StatsGrid stats={pokemon.stats} />
-              
-              <div className="grid grid-cols-2 gap-4">
-                <InfoBox label="Height" value={`${(pokemon.height / 10).toFixed(1)} m`} />
-                <InfoBox label="Weight" value={`${(pokemon.weight / 10).toFixed(1)} kg`} />
-                <InfoBox label="Base XP" value={pokemon.base_experience || '?'} />
-                <InfoBox 
-                  label="Abilities" 
-                  value={pokemon.abilities.filter(a => !a.is_hidden).map(a => a.ability.name).join(', ')} 
-                />
-              </div>
+              <InfoSection pokemon={pokemon} />
             </div>
           </div>
+          
           <EvolutionChain 
             speciesUrl={pokemon.species.url}
-            onPokemonClick={onEvolutionClick} // ✅ Pass it here
+            onPokemonClick={onEvolutionClick}
           />
         </div>
       )}
     </>
   );
-};
+});
+
+// Memoized Sub-components
+const ShinyToggle = memo(({ isShiny, setIsShiny }) => (
+  <button
+    onClick={() => setIsShiny(!isShiny)}
+    className={`p-2 rounded-full transition-colors ${
+      isShiny ? 'bg-yellow-400/20' : 'bg-white/10'
+    } hover:bg-white/20`}
+    aria-label="Toggle shiny variant"
+  >
+    <SparklesIcon className="w-5 h-5 text-yellow-400" />
+  </button>
+));
+
+const SoundButton = memo(({ playSound }) => (
+  <button
+    onClick={playSound}
+    className="p-2 md:p-3 rounded-full bg-white/10 hover:bg-white/20 transition"
+    aria-label="Play cry"
+  >
+    <SpeakerWaveIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
+  </button>
+));
+
+const RefreshButton = memo(({ onRandom }) => (
+  <button
+    onClick={onRandom}
+    className="p-2 md:p-3 rounded-full bg-white/10 hover:bg-white/20 transition"
+    aria-label="Refresh"
+  >
+    <ArrowPathIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
+  </button>
+));
+
+const PokemonImage = memo(({ spriteUrl, name, isShiny }) => (
+  <div className="relative aspect-square bg-white/5 rounded-2xl overflow-hidden">
+    <img
+      src={spriteUrl}
+      alt={name}
+      loading="lazy"
+      decoding="async"
+      className="w-full h-full object-contain p-4 hover:scale-105 transition-transform duration-300 pokemon-image"
+      onLoad={(e) => {
+        e.target.classList.add('pokemon-image-loaded');
+        e.target.classList.remove('pokemon-image');
+      }}
+      onError={(e) => {
+        e.target.src = '/placeholder-pokeball.png';
+        e.target.classList.remove('pokemon-image');
+      }}
+    />
+  </div>
+));
+
+const InfoSection = memo(({ pokemon }) => (
+  <div className="grid grid-cols-2 gap-4">
+    <InfoBox label="Height" value={`${(pokemon.height / 10).toFixed(1)} m`} />
+    <InfoBox label="Weight" value={`${(pokemon.weight / 10).toFixed(1)} kg`} />
+    <InfoBox label="Base XP" value={pokemon.base_experience || '?'} />
+    <InfoBox 
+      label="Abilities" 
+      value={pokemon.abilities.filter(a => !a.is_hidden).map(a => a.ability.name).join(', ')} 
+    />
+  </div>
+));
+
 
 // Sub-components
-const TypeBadges = ({ types }) => (
+const TypeBadges = memo(({ types }) => (
   <div className="flex flex-wrap gap-2">
     {types.map((type) => (
       <span
@@ -136,7 +170,7 @@ const TypeBadges = ({ types }) => (
       </span>
     ))}
   </div>
-);
+));
 
 const typeColors = {
   normal: 'bg-gray-400 text-gray-900',
@@ -159,31 +193,36 @@ const typeColors = {
   fairy: 'bg-pink-300 text-gray-900',
 };
 
-const StatsGrid = ({ stats }) => (
+const StatItem = memo(({ stat }) => (
+  <div className="bg-white/5 p-2 rounded-lg text-center">
+    <p className="text-xs text-white/70 uppercase tracking-wider mb-1">
+      {stat.stat.name.replace('-', ' ')}
+    </p>
+    <p className="text-lg font-bold text-white">
+      {stat.base_stat}
+      <span className="text-xs ml-1 opacity-70">
+        ({stat.effort > 0 ? `+${stat.effort}` : ''})
+      </span>
+    </p>
+  </div>
+));
+
+const StatsGrid = memo(({ stats }) => (
   <div className="grid grid-cols-3 gap-3">
     {stats.map((stat) => (
-      <div key={stat.stat.name} className="bg-white/5 p-2 rounded-lg text-center">
-        <p className="text-xs text-white/70 uppercase tracking-wider mb-1">
-          {stat.stat.name.replace('-', ' ')}
-        </p>
-        <p className="text-lg font-bold text-white">
-          {stat.base_stat}
-          <span className="text-xs ml-1 opacity-70">
-            ({stat.effort > 0 ? `+${stat.effort}` : ''})
-          </span>
-        </p>
-      </div>
+      <StatItem key={stat.stat.name} stat={stat} />
     ))}
   </div>
-);
+));
 
-const InfoBox = ({ label, value }) => (
+
+const InfoBox = memo(({ label, value }) => (
   <div className="bg-white/5 p-3 rounded-lg">
     <p className="text-xs text-white/70 uppercase tracking-wider">{label}</p>
     <p className="text-base font-medium text-white truncate" title={value}>
       {value || 'Unknown'}
     </p>
   </div>
-);
+));
 
 export default PokemonCard;

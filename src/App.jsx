@@ -1,20 +1,25 @@
-import { useState } from 'react';
+import { memo, useState, useCallback } from 'react'; // Added useCallback
 import PokemonCard from './components/PokemonCard';
 import SearchBar from './components/SearchBar';
 
-export default function App() {
+// Wrap main component in memo to prevent unnecessary re-renders
+const App = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshCount, setRefreshCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const handleEvolutionClick = (pokemonName) => {
+
+  // Memoize evolution click handler
+  const handleEvolutionClick = useCallback((pokemonName) => {
     setSearchQuery(pokemonName);
-  };
-  const handleRandom = () => {
+  }, []); // Empty array = never recreates
+
+  // Memoize random handler with dependency
+  const handleRandom = useCallback(() => {
     if (isLoading) return;
     setIsLoading(true);
     setSearchQuery('');
     setRefreshCount(prev => prev + 1);
-  };
+  }, [isLoading]); // Only recreate when isLoading changes
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 py-12 px-4 sm:px-6 lg:px-8">
@@ -24,17 +29,17 @@ export default function App() {
         </h1>
         
         <SearchBar 
-          onSearch={setSearchQuery}
-          onRandom={handleRandom}
+          onSearch={setSearchQuery} // Already stable
+          onRandom={handleRandom} // Now memoized
         />
       </header>
       
       <PokemonCard 
         searchQuery={searchQuery}
-        onEvolutionClick={handleEvolutionClick}
+        onEvolutionClick={handleEvolutionClick} // Memoized
         key={refreshCount}
-        onRandom={handleRandom}
-        onLoadComplete={() => setIsLoading(false)}
+        onRandom={handleRandom} // Memoized
+        onLoadComplete={useCallback(() => setIsLoading(false), [])} // Memoized
       />
       
       <footer className="mt-12 text-center text-white/50 text-sm">
@@ -42,4 +47,6 @@ export default function App() {
       </footer>
     </main>
   );
-}
+};
+
+export default memo(App); // Prevent parent re-renders from affecting app

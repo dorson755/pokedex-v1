@@ -1,10 +1,35 @@
-import { useEffect } from 'react';  // Make sure this import exists
+import { useEffect } from 'react';
+import React from 'react'; // Import React for memo
 import useEvolutionChain from '../hooks/useEvolutionChain';
 
-const EvolutionChain = ({ speciesUrl, onPokemonClick }) => {
+// 1. Create memoized EvolutionItem component
+const EvolutionItem = React.memo(({ evo, index, onPokemonClick }) => (
+  <div className="flex items-center gap-6">
+    {index > 0 && <span className="text-white/50">→</span>}
+    <button
+      onClick={() => onPokemonClick(evo.name)}
+      className="group transition-transform hover:scale-105"
+    >
+      <div className="text-center">
+        <img
+          src={evo.sprite}
+          alt={evo.name}
+          loading="lazy"
+          decoding="async"
+          className="w-24 h-24 object-contain mx-auto group-hover:brightness-125 transition-all"
+        />
+        <p className="text-white font-medium capitalize group-hover:text-blue-300">
+          {evo.name}
+        </p>
+      </div>
+    </button>
+  </div>
+));
+
+// 2. Wrap main component in memo
+const EvolutionChain = React.memo(({ speciesUrl, onPokemonClick }) => {
   const { chain, loading } = useEvolutionChain(speciesUrl);
 
-  // Add this useEffect hook
   useEffect(() => {
     if (chain) {
       chain.forEach(evo => {
@@ -15,9 +40,8 @@ const EvolutionChain = ({ speciesUrl, onPokemonClick }) => {
         document.head.appendChild(link);
       });
     }
-  }, [chain]);  // Only runs when chain updates
+  }, [chain]);
 
-  // Rest of your existing code remains unchanged
   if (loading) return <div className="glass-panel font-bold text-white p-4">Loading evolution chain...</div>;
   if (!chain) return null;
 
@@ -26,30 +50,16 @@ const EvolutionChain = ({ speciesUrl, onPokemonClick }) => {
       <h3 className="text-xl font-bold text-white mb-4">Evolution Chain</h3>
       <div className="flex flex-wrap justify-center gap-6">
         {chain.map((evo, index) => (
-          <div key={evo.id} className="flex items-center gap-6">
-            {index > 0 && <span className="text-white/50">→</span>}
-            <button
-              onClick={() => onPokemonClick(evo.name)}
-              className="group transition-transform hover:scale-105"
-            >
-              <div className="text-center">
-                <img
-                  src={evo.sprite}
-                  alt={evo.name}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-24 h-24 object-contain mx-auto group-hover:brightness-125 transition-all"
-                />
-                <p className="text-white font-medium capitalize group-hover:text-blue-300">
-                  {evo.name}
-                </p>
-              </div>
-            </button>
-          </div>
+          <EvolutionItem 
+            key={evo.id} 
+            evo={evo} 
+            index={index}
+            onPokemonClick={onPokemonClick}
+          />
         ))}
       </div>
     </div>
   );
-};
+});
 
 export default EvolutionChain;
