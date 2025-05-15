@@ -3,12 +3,22 @@
 @tailwind utilities;
 
 @layer components {
-  .glass-panel {
-    @apply backdrop-blur-lg border border-white/20 rounded-3xl shadow-2xl;
-    background-color: rgba(255, 255, 255, 0.05);
-    -webkit-backdrop-filter: blur(20px);
+.glass-panel {
+  @apply bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl shadow-2xl;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.01) 100%
+  );
 
-  }
+  /* Add Safari/iOS support */
+  -webkit-backdrop-filter: blur(16px); /* match `backdrop-blur-lg` */
+  backdrop-filter: blur(16px);
+
+  /* iOS Safari sometimes needs a fallback to recognize the blur */
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
 
   /* Custom animations */
   @keyframes float {
