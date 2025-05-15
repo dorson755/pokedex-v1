@@ -1,27 +1,52 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const combineTypeEffects = (typeResponses) => {
-  const multipliers = {};
-  
+const processTypeRelations = (typeResponses) => {
+  const weaknesses = {};
+  const strengths = {};
+
   typeResponses.forEach(({ damage_relations }) => {
-    // Process weaknesses
+    // Defensive calculations
     damage_relations.double_damage_from.forEach(({ name }) => {
-      multipliers[name] = (multipliers[name] || 1) * 2;
+      weaknesses[name] = (weaknesses[name] || 1) * 2;
     });
-    
-    // Process resistances
     damage_relations.half_damage_from.forEach(({ name }) => {
-      multipliers[name] = (multipliers[name] || 1) * 0.5;
+      weaknesses[name] = (weaknesses[name] || 1) * 0.5;
     });
-    
-    // Process immunities
     damage_relations.no_damage_from.forEach(({ name }) => {
-      multipliers[name] = 0;
+      weaknesses[name] = 0;
+    });
+
+    // Offensive calculations (FIXED)
+    damage_relations.double_damage_to.forEach(({ name }) => {
+      strengths[name] = (strengths[name] || 1) * 2;
     });
   });
 
-  return multipliers;
+  // Filter out 1× multipliers
+  const filteredStrengths = Object.fromEntries(
+    Object.entries(strengths).filter(([_, val]) => val !== 1)
+  );
+
+  return { weaknesses, strengths: filteredStrengths };
+};
+
+const processMoves = async (moves) => {
+  const moveRequests = moves.map(m => 
+    axios.get(m.move.url).then(res => ({
+      name: m.move.name,
+      data: {
+        accuracy: res.data.accuracy,
+        power: res.data.power,
+        pp: res.data.pp,
+        type: res.data.type.name,
+        damageClass: res.data.damage_class.name,
+        effect: res.data.effect_entries.find(e => e.language.name === 'en')?.effect
+      }
+    }))
+  );
+  
+  return Promise.all(moveRequests);
 };
 
 export default function usePokemon(searchQuery) {
@@ -29,7 +54,8 @@ export default function usePokemon(searchQuery) {
     pokemon: null,
     loading: true,
     error: null,
-    typeWeaknesses: {}
+    typeWeaknesses: {},
+    typeStrengths: {} // Added strengths
   });
 
   useEffect(() => {
@@ -41,26 +67,23 @@ export default function usePokemon(searchQuery) {
           ...prev, 
           loading: true, 
           error: null,
-          typeWeaknesses: {} 
+          typeWeaknesses: {},
+          typeStrengths: {} 
         }));
         
-        const identifier = searchQuery 
-          ? searchQuery.toLowerCase()
-          : Math.floor(Math.random() * 1024) + 1;
-
-        // Fetch Pokémon data
+        const identifier = searchQuery?.toLowerCase() || Math.floor(Math.random() * 1024) + 1;
         const { data } = await axios.get(
           `https://pokeapi.co/api/v2/pokemon/${identifier}`,
           { signal: controller.signal }
         );
 
-        // Fetch and process type data
         const typeResponses = await Promise.all(
           data.types.map(t => 
             axios.get(t.type.url, { signal: controller.signal })
-          )
+          ) // Added closing parenthesis for map
         );
-        const typeWeaknesses = combineTypeEffects(
+        const movesData = await processMoves(data.moves);
+        const { weaknesses, strengths } = processTypeRelations(
           typeResponses.map(r => r.data)
         );
 
@@ -69,7 +92,10 @@ export default function usePokemon(searchQuery) {
             pokemon: data,
             loading: false,
             error: null,
-            typeWeaknesses
+            typeWeaknesses: weaknesses,
+            typeStrengths: strengths,
+            moves: movesData // Add this line
+
           });
         }
 
@@ -81,14 +107,14 @@ export default function usePokemon(searchQuery) {
             error: error.response?.status === 404 
               ? "Pokémon not found" 
               : "Failed to load Pokémon",
-            typeWeaknesses: {}
+            typeWeaknesses: {},
+            typeStrengths: {}
           });
         }
       }
     };
 
     fetchPokemon();
-
     return () => controller.abort();
   }, [searchQuery]);
 

@@ -10,13 +10,16 @@ import LoadingSkeleton from './LoadingSkeleton';
 import ErrorMessage from './ErrorMessage';
 import EvolutionChain from './EvolutionChain';
 import WeaknessContent from './WeaknessContent';
+import StrengthsContent from './StrengthsContent';
 import SectionGrid from './SectionGrid';
+import MoveListContent from './MoveListContent';
+
 
 // Main component wrapped in memo
 const PokemonCard = memo(({ searchQuery, onRandom, onLoadComplete, onEvolutionClick }) => {
   const [isShiny, setIsShiny] = useState(false);
   const [activeSection, setActiveSection] = useState(null);
-  const { pokemon, loading, error, typeWeaknesses  } = usePokemon(searchQuery);
+  const { pokemon, loading, error, typeWeaknesses, typeStrengths, moves } = usePokemon(searchQuery);
   // Lightbox Component
   const InfoLightbox = memo(({ children, onClose }) => {
     const handleKeyDown = useCallback((e) => {
@@ -119,11 +122,11 @@ const PokemonCard = memo(({ searchQuery, onRandom, onLoadComplete, onEvolutionCl
             
             <div className="space-y-6">
               <TypeBadges types={pokemon.types} />
-              <SectionGrid setActiveSection={setActiveSection} />
               <StatsGrid stats={pokemon.stats} />
               <InfoSection pokemon={pokemon} />
             </div>
           </div>
+          <SectionGrid setActiveSection={setActiveSection} />
           
           <EvolutionChain 
             speciesUrl={pokemon.species.url}
@@ -131,12 +134,27 @@ const PokemonCard = memo(({ searchQuery, onRandom, onLoadComplete, onEvolutionCl
           />
         </div>
       )}
+      {/* Conditional Loading */}
       {activeSection === 'weaknesses' && (
         <InfoLightbox onClose={() => setActiveSection(null)}>
           <WeaknessContent 
             typeWeaknesses={typeWeaknesses} 
             typeColors={typeColors} 
           />
+        </InfoLightbox>
+      )}
+
+      {activeSection === 'strengths' && (
+        <InfoLightbox onClose={() => setActiveSection(null)}>
+          <StrengthsContent 
+            typeStrengths={typeStrengths}  // Should be an object like {grass: 2, bug: 2}
+            typeColors={typeColors} 
+          />
+        </InfoLightbox>
+      )}
+      {activeSection === 'moves' && (
+        <InfoLightbox onClose={() => setActiveSection(null)}>
+          <MoveListContent moves={moves} />
         </InfoLightbox>
       )}
     </>
