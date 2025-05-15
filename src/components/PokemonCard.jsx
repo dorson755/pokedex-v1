@@ -2,17 +2,61 @@ import React, { memo, useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   SpeakerWaveIcon, 
   ArrowPathIcon,
-  SparklesIcon 
+  SparklesIcon,
+  XMarkIcon 
 } from '@heroicons/react/24/solid';
 import usePokemon from '../hooks/usePokemon';
 import LoadingSkeleton from './LoadingSkeleton';
 import ErrorMessage from './ErrorMessage';
 import EvolutionChain from './EvolutionChain';
+import WeaknessContent from './WeaknessContent';
+import SectionGrid from './SectionGrid';
 
 // Main component wrapped in memo
 const PokemonCard = memo(({ searchQuery, onRandom, onLoadComplete, onEvolutionClick }) => {
   const [isShiny, setIsShiny] = useState(false);
-  const { pokemon, loading, error } = usePokemon(searchQuery);
+  const [activeSection, setActiveSection] = useState(null);
+  const { pokemon, loading, error, typeWeaknesses  } = usePokemon(searchQuery);
+  // Lightbox Component
+  const InfoLightbox = memo(({ children, onClose }) => {
+    const handleKeyDown = useCallback((e) => {
+      if (e.key === 'Escape') onClose();
+    }, [onClose]);
+
+    return (
+      <div 
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        onClick={onClose}
+        onKeyDown={handleKeyDown}
+      >
+        <div 
+          className="glass-panel max-w-2xl w-full p-6 rounded-xl relative max-h-[90vh] overflow-y-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 text-white/80 hover:text-white transition-colors"
+            aria-label="Close"
+          >
+            <XMarkIcon className="w-6 h-6" />
+          </button>
+          {children}
+        </div>
+      </div>
+    );
+  });
+
+  // Section Button
+  const SectionButton = memo(({ title, onClick }) => (
+    <button
+      onClick={onClick}
+      className="glass-panel p-4 hover:bg-white/10 transition-all rounded-xl flex items-center justify-center aspect-square"
+    >
+      <span className="text-white font-medium text-center text-sm md:text-base">
+        {title}
+      </span>
+    </button>
+  ));
 
   // Memoize sprite URL
   const spriteUrl = useMemo(() => {
@@ -75,6 +119,7 @@ const PokemonCard = memo(({ searchQuery, onRandom, onLoadComplete, onEvolutionCl
             
             <div className="space-y-6">
               <TypeBadges types={pokemon.types} />
+              <SectionGrid setActiveSection={setActiveSection} />
               <StatsGrid stats={pokemon.stats} />
               <InfoSection pokemon={pokemon} />
             </div>
@@ -85,6 +130,14 @@ const PokemonCard = memo(({ searchQuery, onRandom, onLoadComplete, onEvolutionCl
             onPokemonClick={onEvolutionClick}
           />
         </div>
+      )}
+      {activeSection === 'weaknesses' && (
+        <InfoLightbox onClose={() => setActiveSection(null)}>
+          <WeaknessContent 
+            typeWeaknesses={typeWeaknesses} 
+            typeColors={typeColors} 
+          />
+        </InfoLightbox>
       )}
     </>
   );
