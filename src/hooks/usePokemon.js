@@ -100,7 +100,7 @@ export default function usePokemon(searchQuery) {
         const variants = speciesResponse.data.varieties
           .filter(v => !v.is_default)
           .map(v => ({
-            name: v.pokemon.name.split('-')[0], // 'charizard-mega-x' -> 'charizard'
+            name: v.pokemon.name, // Removed .split('-')[0] to keep full name
             url: v.pokemon.url
           }));
 

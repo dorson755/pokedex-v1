@@ -2,29 +2,28 @@ import { memo } from 'react';
 import LoadingSkeleton from './LoadingSkeleton';
 
 const VariantsContent = memo(({ variants, onVariantSelect, isLoading }) => {
-  // Improved variant name formatter
   const getVariantName = (variant) => {
-    // Handle special cases first
-    if (variant.name.includes('gmax')) return 'Gigantamax';
-    if (variant.name.includes('mega')) {
-      return variant.name.includes('-x') ? 'Mega X' : 
-             variant.name.includes('-y') ? 'Mega Y' : 'Mega';
-    }
+  // Split the name into parts (e.g., "pikachu-libre" → ["pikachu", "libre"])
+  const parts = variant.name.split('-');
 
-    // Extract form name from URL structure
-    const parts = variant.url.split('/');
-    const idWithForm = parts[parts.length - 2]; // Gets "25-pikachu-rock-star" from URL
-    
-    if (idWithForm.includes('-')) {
-      const formName = idWithForm.split('-').slice(1).join(' ');
-      return formName
-        .split(' ')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-    }
-    
-    return 'Alternate Form';
-  };
+  // Process each part for special cases and capitalization
+  const processedParts = parts.map((part) => {
+    if (part === 'gmax') return 'Gigantamax';
+    if (part === 'mega') return 'Mega';
+    return part.charAt(0).toUpperCase() + part.slice(1);
+  });
+
+  // Handle Mega X/Y explicitly
+  if (processedParts.includes('Mega')) {
+    if (processedParts.includes('X')) return 'Mega X';
+    if (processedParts.includes('Y')) return 'Mega Y';
+  }
+
+  // Join parts with " - " for display (e.g., "Pikachu - Libre")
+  return processedParts.length > 1
+    ? `${processedParts[0]} - ${processedParts.slice(1).join(' ')}`
+    : processedParts[0];
+};
 
   if (isLoading) return <LoadingSkeleton variant="move" count={3} />;
 
