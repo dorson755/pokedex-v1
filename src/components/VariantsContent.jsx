@@ -6,7 +6,7 @@ const VariantsContent = memo(({ variants, onVariantSelect, isLoading }) => {
   // Split the name into parts (e.g., "pikachu-libre" → ["pikachu", "libre"])
   const parts = variant.name.split('-');
 
-  // Process each part for special cases and capitalization
+  // Process each part for special cases and capitalization.
   const processedParts = parts.map((part) => {
     if (part === 'gmax') return 'Gigantamax';
     if (part === 'mega') return 'Mega';
