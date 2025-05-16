@@ -10,7 +10,7 @@ A high-performance Pokédex web app built with React, featuring advanced memoiza
 - **Pokémon Search**: Find any Pokémon by name or ID
 - **Shiny Toggle**: Instantly switch between normal/shiny sprites
 - **Evolution Chains**: Visualize evolutionary relationships
-- **Audio Playback**: Hear authentic Pokémon cries (with volume control)
+- **Audio Playback**: Hear authentic Pokémon cries
 
 ### 🎮 Gamification
 - **Catch/Release System**: Track captured Pokémon in `localStorage`
