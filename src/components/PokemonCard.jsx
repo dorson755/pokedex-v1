@@ -13,18 +13,20 @@ import WeaknessContent from './WeaknessContent';
 import StrengthsContent from './StrengthsContent';
 import SectionGrid from './SectionGrid';
 import MoveListContent from './MoveListContent';
+import VariantsContent from './VariantsContent';
 
 
 // Main component wrapped in memo
 const PokemonCard = memo(({ searchQuery, onRandom, onLoadComplete, onEvolutionClick }) => {
   const [isShiny, setIsShiny] = useState(false);
   const [activeSection, setActiveSection] = useState(null);
-  const { pokemon, loading, error, typeWeaknesses, typeStrengths, moves } = usePokemon(searchQuery);
+  const { pokemon, loading, error, typeWeaknesses, typeStrengths, moves, variants } = usePokemon(searchQuery);
   // Lightbox Component
   const InfoLightbox = memo(({ children, onClose }) => {
     const handleKeyDown = useCallback((e) => {
       if (e.key === 'Escape') onClose();
     }, [onClose]);
+
 
     return (
       <div 
@@ -60,6 +62,11 @@ const PokemonCard = memo(({ searchQuery, onRandom, onLoadComplete, onEvolutionCl
       </span>
     </button>
   ));
+  //Variant Handler
+  const handleVariantSelect = useCallback((url) => {
+    const variantId = url.split('/').slice(-2, -1)[0];
+    onEvolutionClick(variantId); // Reuse your evolution click handler
+  }, [onEvolutionClick]);
 
   // Memoize sprite URL
   const spriteUrl = useMemo(() => {
@@ -155,6 +162,15 @@ const PokemonCard = memo(({ searchQuery, onRandom, onLoadComplete, onEvolutionCl
       {activeSection === 'moves' && (
         <InfoLightbox onClose={() => setActiveSection(null)}>
           <MoveListContent moves={moves} />
+        </InfoLightbox>
+      )}
+      {activeSection === 'variants' && (
+        <InfoLightbox onClose={() => setActiveSection(null)}>
+          <VariantsContent 
+            variants={variants}
+            onVariantSelect={handleVariantSelect}
+            isLoading={loading} // Pass loading state
+          />
         </InfoLightbox>
       )}
     </>

@@ -17,7 +17,7 @@ const processTypeRelations = (typeResponses) => {
       weaknesses[name] = 0;
     });
 
-    // Offensive calculations (FIXED)
+    // Offensive calculations
     damage_relations.double_damage_to.forEach(({ name }) => {
       strengths[name] = (strengths[name] || 1) * 2;
     });
@@ -55,7 +55,9 @@ export default function usePokemon(searchQuery) {
     loading: true,
     error: null,
     typeWeaknesses: {},
-    typeStrengths: {} // Added strengths
+    typeStrengths: {},
+    moves: [],
+    variants: []
   });
 
   useEffect(() => {
@@ -68,24 +70,39 @@ export default function usePokemon(searchQuery) {
           loading: true, 
           error: null,
           typeWeaknesses: {},
-          typeStrengths: {} 
+          typeStrengths: {},
+          moves: [],
+          variants: []
         }));
         
         const identifier = searchQuery?.toLowerCase() || Math.floor(Math.random() * 1024) + 1;
+
+        // 1. Fetch Pokémon data
         const { data } = await axios.get(
           `https://pokeapi.co/api/v2/pokemon/${identifier}`,
           { signal: controller.signal }
         );
 
-        const typeResponses = await Promise.all(
-          data.types.map(t => 
+        // 2. Fetch additional data in parallel
+        const [typeResponses, speciesResponse] = await Promise.all([
+          Promise.all(data.types.map(t => 
             axios.get(t.type.url, { signal: controller.signal })
-          ) // Added closing parenthesis for map
-        );
+          )),
+          axios.get(data.species.url, { signal: controller.signal })
+        ]);
+
+        // 3. Process all data
         const movesData = await processMoves(data.moves);
         const { weaknesses, strengths } = processTypeRelations(
           typeResponses.map(r => r.data)
         );
+        
+        const variants = speciesResponse.data.varieties
+          .filter(v => !v.is_default)
+          .map(v => ({
+            name: v.pokemon.name.split('-')[0], // 'charizard-mega-x' -> 'charizard'
+            url: v.pokemon.url
+          }));
 
         if (!controller.signal.aborted) {
           setState({
@@ -94,8 +111,8 @@ export default function usePokemon(searchQuery) {
             error: null,
             typeWeaknesses: weaknesses,
             typeStrengths: strengths,
-            moves: movesData // Add this line
-
+            moves: movesData,
+            variants
           });
         }
 
@@ -108,7 +125,9 @@ export default function usePokemon(searchQuery) {
               ? "Pokémon not found" 
               : "Failed to load Pokémon",
             typeWeaknesses: {},
-            typeStrengths: {}
+            typeStrengths: {},
+            moves: [],
+            variants: []
           });
         }
       }

@@ -44,3 +44,16 @@
   filter: none;
   transform: none;
 }
+
+.variant-transition {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.variant-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.variant-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+}
