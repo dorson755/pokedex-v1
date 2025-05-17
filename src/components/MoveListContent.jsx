@@ -15,9 +15,10 @@ const MoveListContent = memo(({ moves }) => {
   const [expandedMove, setExpandedMove] = useState(null);
   const listRef = useRef();
   const wrapperRef = useRef();
+  const rowHeights = useRef({});
   const [listHeight, setListHeight] = useReactState(500); // fallback
 
-  // Dynamically measure container height
+  // Measure container height
   useLayoutEffect(() => {
     const measure = () => {
       if (wrapperRef.current) {
@@ -30,41 +31,50 @@ const MoveListContent = memo(({ moves }) => {
     return () => window.removeEventListener('resize', measure);
   }, []);
 
-  // Dynamic row height
+  // Default height fallback
+  const defaultHeight = 60;
+
   const getItemSize = useCallback(
-    (index) => (expandedMove === moves[index].name ? 150 : 60),
-    [expandedMove, moves]
+    (index) => rowHeights.current[index] || defaultHeight,
+    []
   );
 
   const handleExpand = (moveName) => {
-  const newExpanded = expandedMove === moveName ? null : moveName;
-  const oldIndex = expandedMove
-    ? moves.findIndex((m) => m.name === expandedMove)
-    : -1;
-  const newIndex = newExpanded
-    ? moves.findIndex((m) => m.name === newExpanded)
-    : -1;
+    const newExpanded = expandedMove === moveName ? null : moveName;
+    const oldIndex = expandedMove
+      ? moves.findIndex((m) => m.name === expandedMove)
+      : -1;
+    const newIndex = newExpanded
+      ? moves.findIndex((m) => m.name === newExpanded)
+      : -1;
 
-  setExpandedMove(newExpanded);
+    setExpandedMove(newExpanded);
 
-  if (listRef.current) {
-    // Reset the old index so space closes up
-    if (oldIndex >= 0) listRef.current.resetAfterIndex(oldIndex, true);
-    // Reset the new index so space expands
-    if (newIndex >= 0 && newIndex !== oldIndex)
-      listRef.current.resetAfterIndex(newIndex, true);
-  }
-};
+    if (listRef.current) {
+      if (oldIndex >= 0) listRef.current.resetAfterIndex(oldIndex);
+      if (newIndex >= 0 && newIndex !== oldIndex)
+        listRef.current.resetAfterIndex(newIndex);
+    }
+  };
 
-
-  // Row renderer
   const Row = memo(({ index, style, data }) => {
     const { moves, expandedMove, handleExpand } = data;
     const move = moves[index];
+    const rowRef = useRef(null);
+
+    useLayoutEffect(() => {
+      if (rowRef.current) {
+        const height = rowRef.current.getBoundingClientRect().height + 8; // 8px extra spacing
+        if (rowHeights.current[index] !== height) {
+          rowHeights.current[index] = height;
+          if (listRef.current) listRef.current.resetAfterIndex(index);
+        }
+      }
+    }, [expandedMove, index]);
 
     return (
-      <div style={style}>
-        <div className="glass-panel rounded-lg mx-2 mb-2">
+      <div style={{ ...style, paddingBottom: '0.5rem' }}>
+        <div ref={rowRef} className="glass-panel rounded-lg mx-2">
           <button
             className="w-full p-3 flex justify-between items-center"
             onClick={() => handleExpand(move.name)}
@@ -111,15 +121,11 @@ const MoveListContent = memo(({ moves }) => {
       <div className="flex-1 overflow-hidden">
         <VariableSizeList
           ref={listRef}
-          height={listHeight - 56 /* subtract title height estimate */}
+          height={listHeight - 56}
           width="100%"
           itemCount={moves.length}
           itemSize={getItemSize}
-          itemData={{
-            moves,
-            expandedMove,
-            handleExpand,
-          }}
+          itemData={{ moves, expandedMove, handleExpand }}
           itemKey={(index) => moves[index].name}
         >
           {Row}
