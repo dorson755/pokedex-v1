@@ -5,6 +5,7 @@
 @layer components {
   .glass-panel {
     @apply bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl shadow-2xl;
+    isolation: isolate;
     background: linear-gradient(
       135deg,
       rgba(255, 255, 255, 0.05) 0%,
