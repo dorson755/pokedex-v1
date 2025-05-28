@@ -74,7 +74,7 @@ const MoveListContent = memo(({ moves }) => {
 
     return (
       <div style={{ ...style, paddingBottom: '0.5rem' }}>
-        <div ref={rowRef} className="glass-panel rounded-lg mx-2">
+        <div ref={rowRef} className="bg-white/5 rounded-lg mx-2">
           <button
             className="w-full p-3 flex justify-between items-center"
             onClick={() => handleExpand(move.name)}
